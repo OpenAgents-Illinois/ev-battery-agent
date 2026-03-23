@@ -54,6 +54,7 @@ public class App {
                 continue;
             }
 
+            System.out.println("Analyzing " + telemetry.vin + " (" + telemetry.vehicleModel + ")...");
             EvExpert agent = factory.newAgent(telemetry.vehicleModel);
             String result = agent.chat(ANALYZE_PROMPT.formatted(telemetry.toPromptString()));
             System.out.println(result);
