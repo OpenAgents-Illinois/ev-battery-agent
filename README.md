@@ -1,6 +1,6 @@
 # ev-battery-agent
 
-An autonomous AI agent built in **Go** that monitors Rivian EV battery health, detects safety threshold violations using **Gemini 2.0 Flash** + RAG over owner manuals, and auto-files Jira tickets — with a **Bubble Tea TUI** and REST API.
+An autonomous AI agent built in **Go** that monitors Rivian EV battery health, detects safety threshold violations using **Gemini 2.0 Flash** + RAG over owner manuals, and auto-files Jira tickets directly within your Atlassian Jira workspace
 
 If a problem occurs (such as a battery thermal risk or a voltage anomaly) the agent creates a high-priority **Atlassian Jira** ticket so engineers can act before it leads to a recall.
 
