@@ -59,11 +59,6 @@ public class AgentFactory {
             "R1T", r1tRetriever
         );
 
-        // Pre-warm the gRPC connections so the first real query isn't slow
-        System.out.print("Warming up connections...");
-        embeddingModel.embed(TextSegment.from("battery temperature voltage"));
-        chatModel.generate("Reply with only the word: ready");
-        System.out.println(" done.");
     }
 
     /**
