@@ -45,14 +45,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// Keep the text input strictly within its bordered container.
-		// Reserve room for prompt and cursor so typing never wraps this row.
+		// Reserve one extra safety cell to prevent terminal edge auto-wrap.
 		inputOuterWidth := m.width - 2
 		if inputOuterWidth < 3 {
 			inputOuterWidth = 3
 		}
 		inputInnerWidth := inputOuterWidth - inputBorderStyle.GetHorizontalFrameSize()
 		promptWidth := lipgloss.Width(m.textinput.Prompt)
-		m.textinput.Width = inputInnerWidth - promptWidth - 1
+		m.textinput.Width = inputInnerWidth - promptWidth - 2
 		if m.textinput.Width < 1 {
 			m.textinput.Width = 1
 		}

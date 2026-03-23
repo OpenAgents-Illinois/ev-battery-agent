@@ -37,8 +37,10 @@ func (m model) View() string {
 		inputInnerWidth = 1
 	}
 	inputView := strings.SplitN(m.textinput.View(), "\n", 2)[0]
-	inputView = clipTextToWidth(inputView, inputInnerWidth)
-	inputView = lipgloss.NewStyle().Width(inputInnerWidth).Render(inputView)
+	inputView = lipgloss.NewStyle().
+		MaxWidth(inputInnerWidth).
+		Width(inputInnerWidth).
+		Render(inputView)
 
 	inputBox := inputBorderStyle.
 		Width(inputInnerWidth).
