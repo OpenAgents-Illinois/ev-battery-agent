@@ -57,5 +57,4 @@ bin/
 # IDE
 .vscode/
 
-# Generated embedding caches (rebuilt automatically on first run)
-embeddings/
+# Embedding caches are committed to git — delete folder and re-run to rebuild
