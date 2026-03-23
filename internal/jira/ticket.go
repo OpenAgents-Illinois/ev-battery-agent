@@ -51,7 +51,14 @@ func (c *Client) FileTicket(argsJSON string) string {
 
 	created, _, err := c.api.Issue.Create(issue)
 	if err != nil {
-		return "FAILED: Could not create Jira issue: " + err.Error()
+		// Some Jira projects/screens reject setting labels on create.
+		// Retry once without labels so ticket filing still succeeds.
+		issue.Fields.Labels = nil
+		created, _, retryErr := c.api.Issue.Create(issue)
+		if retryErr != nil {
+			return "FAILED: Could not create Jira issue: " + retryErr.Error()
+		}
+		return fmt.Sprintf("SUCCESS: Ticket created with Key: %s [%s / %s priority, labels=none (fallback)]", created.Key, issueType, priority)
 	}
 	return fmt.Sprintf("SUCCESS: Ticket created with Key: %s [%s / %s priority, labels=%s]", created.Key, issueType, priority, strings.Join(labels, ","))
 }
