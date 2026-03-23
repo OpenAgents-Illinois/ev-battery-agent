@@ -1,5 +1,8 @@
 package com.ev.battery.agent;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
@@ -70,7 +73,38 @@ public class AgentFactory {
             .build();
     }
 
+    /**
+     * Builds a retriever for the given docs path, using a cached embedding store if available.
+     * Cache is stored in embeddings/<name>.json (e.g. embeddings/R1S.json).
+     * First run embeds and saves; subsequent runs load from disk instantly.
+     */
     private ContentRetriever buildRetriever(VertexAiEmbeddingModel embeddingModel, String docsPath) {
+        String cacheName = docsPath.replace("/", "_").replace("\\", "_");
+        Path cacheFile = Path.of("embeddings", cacheName + ".json");
+
+        InMemoryEmbeddingStore<TextSegment> store;
+        if (Files.exists(cacheFile)) {
+            System.out.println("Loading embedding cache: " + cacheFile);
+            try {
+                store = InMemoryEmbeddingStore.fromFile(cacheFile);
+            } catch (Exception e) {
+                System.out.println("Cache load failed, re-embedding: " + e.getMessage());
+                store = embedAndSave(embeddingModel, docsPath, cacheFile);
+            }
+        } else {
+            System.out.println("No cache found for " + docsPath + " — embedding now (one-time)...");
+            store = embedAndSave(embeddingModel, docsPath, cacheFile);
+        }
+
+        return EmbeddingStoreContentRetriever.builder()
+            .embeddingModel(embeddingModel)
+            .embeddingStore(store)
+            .maxResults(5)
+            .build();
+    }
+
+    private InMemoryEmbeddingStore<TextSegment> embedAndSave(
+            VertexAiEmbeddingModel embeddingModel, String docsPath, Path cacheFile) {
         InMemoryEmbeddingStore<TextSegment> store = new InMemoryEmbeddingStore<>();
         EmbeddingStoreIngestor.builder()
             .documentSplitter(DocumentSplitters.recursive(300, 30))
@@ -78,10 +112,13 @@ public class AgentFactory {
             .embeddingStore(store)
             .build()
             .ingest(FileSystemDocumentLoader.loadDocuments(docsPath));
-        return EmbeddingStoreContentRetriever.builder()
-            .embeddingModel(embeddingModel)
-            .embeddingStore(store)
-            .maxResults(5)
-            .build();
+        try {
+            Files.createDirectories(cacheFile.getParent());
+            store.serializeToFile(cacheFile);
+            System.out.println("Embedding cache saved: " + cacheFile);
+        } catch (IOException e) {
+            System.out.println("Warning: could not save embedding cache: " + e.getMessage());
+        }
+        return store;
     }
 }

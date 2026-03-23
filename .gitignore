@@ -56,3 +56,6 @@ bin/
 
 # IDE
 .vscode/
+
+# Generated embedding caches (rebuilt automatically on first run)
+embeddings/
