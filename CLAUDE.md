@@ -41,16 +41,16 @@ PDFs in `docs/R1S/` and `docs/R1T/` are loaded, chunked (~300 words, 30 overlap)
 ## Build & Run
 ```bash
 # Build binary
-go build -o ev-battery-agent-go ./cmd/ev-battery-agent/
+go build -o ev-battery-agent ./cmd/ev-battery-agent/
 
 # Launch Bubble Tea TUI
-./ev-battery-agent-go
+./ev-battery-agent
 
 # HTTP server mode on port 8080
-./ev-battery-agent-go --server
+./ev-battery-agent --server
 
 # HTTP server on custom port
-./ev-battery-agent-go --server 9090
+./ev-battery-agent --server 9090
 ```
 
 ### REST API
