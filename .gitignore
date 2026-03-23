@@ -26,4 +26,5 @@ ev-battery-agent-go
 .vscode/
 .idea/
 
-# Embedding caches are committed to git — delete folder and re-run to rebuild
+# Embeddings (generated on first run, re-create by deleting and re-running)
+embeddings/
