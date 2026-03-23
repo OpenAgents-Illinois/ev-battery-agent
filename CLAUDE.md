@@ -10,7 +10,7 @@ An autonomous AI agent that monitors EV battery health and auto-files Jira ticke
 ## Architecture (Go)
 
 ```
-cmd/ev-battery-agent/main.go   — entry point (TUI mode or --server mode)
+main.go                        — entry point (TUI mode or --server mode)
 internal/
   agent/
     factory.go   — AgentFactory: LLM init, RAG retrieval, tool-calling loop
@@ -23,7 +23,12 @@ internal/
   server/
     server.go    — HTTP server: POST /analyze, GET /health
   tui/
-    tui.go       — Bubble Tea TUI (viewport + textinput + spinner + lipgloss)
+    tui.go       — Start() entry point
+    model.go     — model struct, newModel(), Init()
+    update.go    — Update(), submit(), state helpers
+    view.go      — View(), renderLines(), renderStatus(), wordWrap()
+    styles.go    — lipgloss style definitions
+    messages.go  — tea message types
 ```
 
 ## RAG Setup
@@ -41,7 +46,7 @@ PDFs in `docs/R1S/` and `docs/R1T/` are loaded, chunked (~300 words, 30 overlap)
 ## Build & Run
 ```bash
 # Build binary
-go build -o ev-battery-agent ./cmd/ev-battery-agent/
+go build -o ev-battery-agent .
 
 # Launch Bubble Tea TUI
 ./ev-battery-agent
