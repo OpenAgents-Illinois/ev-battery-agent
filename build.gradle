@@ -66,6 +66,8 @@ tasks.register('integrationTest', Test) {
     useJUnitPlatform {
         includeTags 'integration'
     }
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
     workingDir = rootProject.projectDir
     outputs.upToDateWhen { false }
     environment "GCLOUD_PROJECT_ID", dotenv.get("GCLOUD_PROJECT_ID")
