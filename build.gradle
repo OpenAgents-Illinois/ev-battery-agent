@@ -36,6 +36,10 @@ application {
     mainClass = 'com.ev.battery.agent.App'
 }
 
+run {
+    standardInput = System.in
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
