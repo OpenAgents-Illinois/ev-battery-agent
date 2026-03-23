@@ -47,16 +47,30 @@ def dotenv = Dotenv.configure()
     .ignoreIfMissing()
     .load()
 
+// Fast unit tests — no network, no GCP. Run with: ./gradlew test
 test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'integration'
+    }
     workingDir = rootProject.projectDir
-    
+    testLogging {
+        showStandardStreams = true
+        events "passed", "skipped", "failed"
+        exceptionFormat = "full"
+    }
+}
+
+// Integration tests — require live GCP + Jira. Run with: ./gradlew integrationTest
+tasks.register('integrationTest', Test) {
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+    workingDir = rootProject.projectDir
     environment "GCLOUD_PROJECT_ID", dotenv.get("GCLOUD_PROJECT_ID")
     environment "JIRA_TOKEN", dotenv.get("JIRA_TOKEN")
     environment "JIRA_SPACE_KEY", dotenv.get("JIRA_SPACE_KEY")
     environment "JIRA_DOMAIN", dotenv.get("JIRA_DOMAIN")
     environment "JIRA_EMAIL", dotenv.get("JIRA_EMAIL")
-    
     testLogging {
         showStandardStreams = true
         events "passed", "skipped", "failed", "standardOut", "standardError"

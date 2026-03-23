@@ -3,12 +3,15 @@ package com.ev.battery.agent;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvException;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Unit test for simple App.
+ * Integration test — requires live GCP credentials and Jira access.
+ * Run with: ./gradlew integrationTest
  */
+@Tag("integration")
 class BatteryAgentTest {
     @Test
     void testOverheatingScenario() throws DotenvException {
