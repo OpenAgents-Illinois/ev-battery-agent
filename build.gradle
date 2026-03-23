@@ -67,6 +67,7 @@ tasks.register('integrationTest', Test) {
         includeTags 'integration'
     }
     workingDir = rootProject.projectDir
+    outputs.upToDateWhen { false }
     environment "GCLOUD_PROJECT_ID", dotenv.get("GCLOUD_PROJECT_ID")
     environment "JIRA_TOKEN", dotenv.get("JIRA_TOKEN")
     environment "JIRA_SPACE_KEY", dotenv.get("JIRA_SPACE_KEY")
