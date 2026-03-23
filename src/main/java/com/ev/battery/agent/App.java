@@ -6,6 +6,12 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 public class App {
 
+    private static final String INTERACTIVE_PROMPT =
+        "A Rivian EV owner has reported the following battery issue. Analyze it, determine if any safety " +
+        "thresholds are violated, and if so file a Jira ticket using the fileEngineeringTicket tool " +
+        "with severity CRITICAL, WARNING, or INFO.\n\nReport: %s";
+
+    /** Used by BatteryServer for structured API input. */
     static String buildPrompt(BatteryTelemetry t) {
         StringBuilder sb = new StringBuilder();
         sb.append("A Rivian ").append(t.vehicleModel).append(" has reported the following battery readings:\n");
@@ -39,10 +45,8 @@ public class App {
     }
 
     private static void runInteractive(AgentFactory factory) {
-        System.out.println("Paste telemetry as JSON or CSV, or type 'exit' to quit.");
-        System.out.println("  JSON: {\"vin\":\"VIN_789\",\"batteryTempC\":55.0,\"voltageV\":3.1,\"stateOfChargePercent\":82.0,\"drivingMode\":\"driving\",\"vehicleModel\":\"R1S\"}");
-        System.out.println("  CSV:  VIN_789,55.0,3.1,82.0,driving,R1S   (vin,tempC,voltageV[,soc%][,mode][,model])");
-        System.out.println("  vehicleModel is auto-detected from Rivian VINs if omitted.");
+        System.out.println("Describe the battery issue in plain English, or type 'exit' to quit.");
+        System.out.println("  Example: My R1S VIN ABC123 battery is running at 62 degrees, voltage 2.9V, 15% charge while driving.");
         System.out.println();
 
         Scanner scanner = new Scanner(System.in);
@@ -56,22 +60,24 @@ public class App {
                 break;
             }
 
-            BatteryTelemetry telemetry;
-            try {
-                telemetry = TelemetryParser.parse(input);
-            } catch (IllegalArgumentException e) {
-                System.out.println("Invalid input: " + e.getMessage());
-                System.out.println();
-                continue;
-            }
+            // Route to the right vehicle's docs based on mention of R1S/R1T in the message
+            String vehicleModel = detectModelFromText(input);
+            System.out.println("Analyzing... (vehicle: " + vehicleModel + ")");
 
-            System.out.println("Analyzing " + telemetry.vin + " (" + telemetry.vehicleModel + ")...");
-            EvExpert agent = factory.newAgent(telemetry.vehicleModel);
-            String result = agent.chat(buildPrompt(telemetry));
+            EvExpert agent = factory.newAgent(vehicleModel);
+            String result = agent.chat(INTERACTIVE_PROMPT.formatted(input));
             System.out.println(result);
             System.out.println();
         }
 
         scanner.close();
+    }
+
+    /** Detects R1S or R1T from free text. Defaults to R1S if not mentioned. */
+    static String detectModelFromText(String text) {
+        String upper = text.toUpperCase();
+        if (upper.contains("R1T")) return "R1T";
+        if (upper.contains("R1S")) return "R1S";
+        return "R1S"; // default
     }
 }
