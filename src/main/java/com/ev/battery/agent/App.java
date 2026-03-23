@@ -6,8 +6,19 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 public class App {
 
-    private static final String ANALYZE_PROMPT =
-        "Analyze this telemetry: %s. If this violates safety thresholds, file a Jira ticket with the appropriate severity (CRITICAL, WARNING, or INFO).";
+    static String buildPrompt(BatteryTelemetry t) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("A Rivian ").append(t.vehicleModel).append(" has reported the following battery readings:\n");
+        sb.append("- VIN: ").append(t.vin).append("\n");
+        sb.append("- Battery Temperature: ").append(t.batteryTempC).append(" degrees Celsius\n");
+        sb.append("- Cell Voltage: ").append(t.voltageV).append(" V\n");
+        if (t.stateOfChargePercent != null)
+            sb.append("- State of Charge: ").append(t.stateOfChargePercent).append("%\n");
+        sb.append("- Driving Mode: ").append(t.drivingMode).append("\n");
+        sb.append("\nAre any of these readings outside safe operating limits? ");
+        sb.append("If yes, file a Jira ticket using the fileEngineeringTicket tool with severity CRITICAL, WARNING, or INFO.");
+        return sb.toString();
+    }
 
     public static void main(String[] args) {
         Dotenv dotenv = Dotenv.load();
@@ -56,7 +67,7 @@ public class App {
 
             System.out.println("Analyzing " + telemetry.vin + " (" + telemetry.vehicleModel + ")...");
             EvExpert agent = factory.newAgent(telemetry.vehicleModel);
-            String result = agent.chat(ANALYZE_PROMPT.formatted(telemetry.toPromptString()));
+            String result = agent.chat(buildPrompt(telemetry));
             System.out.println(result);
             System.out.println();
         }

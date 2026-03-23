@@ -21,8 +21,6 @@ import io.javalin.Javalin;
  */
 public class BatteryServer {
     private static final Gson GSON = new Gson();
-    private static final String ANALYZE_PROMPT =
-        "Analyze this telemetry: %s. If this violates safety thresholds, file a Jira ticket with the appropriate severity (CRITICAL, WARNING, or INFO).";
 
     public static void start(AgentFactory factory, int port) {
         Javalin app = Javalin.create(config -> {
@@ -43,7 +41,7 @@ public class BatteryServer {
             }
 
             EvExpert agent = factory.newAgent(telemetry.vehicleModel);
-            String analysis = agent.chat(ANALYZE_PROMPT.formatted(telemetry.toPromptString()));
+            String analysis = agent.chat(App.buildPrompt(telemetry));
 
             ctx.contentType("application/json")
                .result(GSON.toJson(new AnalysisResponse(telemetry.vin, analysis)));
