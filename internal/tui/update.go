@@ -119,7 +119,7 @@ func (m *model) submit() (tea.Model, tea.Cmd) {
 	vehicle := agent.DetectModel(text)
 	m.vehicle = vehicle
 	m.addLine("")
-	m.addLine(userMsgStyle.Render("You › ") + text)
+	m.addLine(userMsgStyle.Render("You › ") + wordWrap(text, m.width-10))
 	m.setStatus("Analyzing...", "analyzing")
 	m.viewport.SetContent(m.renderLines())
 	m.viewport.GotoBottom()

@@ -75,14 +75,22 @@ func (f *Factory) runAgentLoop(ctx context.Context, userMessage string) (string,
 		}
 		messages = append(messages, llms.MessageContent{Role: llms.ChatMessageTypeAI, Parts: assistantParts})
 
-		// Execute each tool and append results
+		// Execute all tool calls and append them as one tool turn.
+		// Vertex/Gemini requires function response parts to match the function call
+		// parts from the immediately preceding assistant turn.
+		toolParts := make([]llms.ContentPart, 0, len(choice.ToolCalls))
 		for _, tc := range choice.ToolCalls {
 			result := f.dispatchTool(tc.FunctionCall.Name, tc.FunctionCall.Arguments)
+			toolParts = append(toolParts, llms.ToolCallResponse{
+				ToolCallID: tc.ID,
+				Name:       tc.FunctionCall.Name,
+				Content:    result,
+			})
+		}
+		if len(toolParts) > 0 {
 			messages = append(messages, llms.MessageContent{
-				Role: llms.ChatMessageTypeTool,
-				Parts: []llms.ContentPart{
-					llms.ToolCallResponse{ToolCallID: tc.ID, Name: tc.FunctionCall.Name, Content: result},
-				},
+				Role:  llms.ChatMessageTypeTool,
+				Parts: toolParts,
 			})
 		}
 	}
