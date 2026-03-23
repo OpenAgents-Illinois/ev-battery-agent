@@ -1,64 +1,29 @@
-# Compiled class file
-*.class
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
 
-# Log file
-*.log
+# Go workspace
+go.work
+go.work.sum
 
-# BlueJ files
-*.ctxt
+# Go binary
+ev-battery-agent
+ev-battery-agent-go
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
-
-# Gradle
-
-.gradle
-**/build/
-!**/src/**/build/
-
-# Ignore Gradle GUI config
-gradle-app.setting
-
-# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
-!gradle-wrapper.jar
-
-# Avoid ignore Gradle wrappper properties
-!gradle-wrapper.properties
-
-# Cache of project
-.gradletasknamecache
-
-# Eclipse Gradle plugin generated files
-# Eclipse Core
-.project
-# JDT-specific (Eclipse Java Development Tools)
-.classpath
-
+# Environment
 .env
-target/
-bin/
 
 # macOS
 .DS_Store
 
 # IDE
 .vscode/
+.idea/
 
 # Embedding caches are committed to git — delete folder and re-run to rebuild
-
-# Go binary
-ev-battery-agent
-ev-battery-agent-go

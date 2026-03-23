@@ -5,9 +5,7 @@ An autonomous AI agent that monitors EV battery health and auto-files Jira ticke
 
 **Stack:** Go, tmc/langchaingo, Google Vertex AI (Gemini 2.0 Flash + text-embedding-004), Atlassian Jira REST API, Bubble Tea TUI, net/http server
 
-> Legacy Java implementation is still present (src/, build.gradle) but the primary codebase is now Go.
-
-## Architecture (Go)
+## Architecture
 
 ```
 main.go                        — entry point (TUI mode or --server mode)
