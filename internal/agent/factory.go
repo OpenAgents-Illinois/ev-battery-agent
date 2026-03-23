@@ -6,6 +6,7 @@ import (
 
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/googleai"
+	"github.com/tmc/langchaingo/llms/googleai/vertex"
 
 	"ev-battery-agent/internal/jira"
 )
@@ -16,7 +17,7 @@ type embedderFunc func(ctx context.Context, texts []string) ([][]float32, error)
 // Factory initializes shared resources (LLM, embeddings, vector stores) once at startup.
 // Use Chat to run the agent for a given vehicle model and user message.
 type Factory struct {
-	llm    *googleai.GoogleAI
+	llm    *vertex.Vertex
 	embed  embedderFunc
 	stores map[string]*vectorStore // "R1S" → store, "R1T" → store
 	jira   *jira.Client
@@ -45,7 +46,7 @@ var jiraToolDef = llms.Tool{
 
 // NewFactory connects to Vertex AI and loads (or creates) per-vehicle embedding stores.
 func NewFactory(ctx context.Context, projectID, location string) (*Factory, error) {
-	llm, err := googleai.New(ctx,
+	llm, err := vertex.New(ctx,
 		googleai.WithCloudProject(projectID),
 		googleai.WithCloudLocation(location),
 		googleai.WithDefaultModel("gemini-2.0-flash-001"),

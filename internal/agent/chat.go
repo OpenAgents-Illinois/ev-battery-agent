@@ -34,9 +34,10 @@ func (f *Factory) Chat(ctx context.Context, vehicleModel, userMessage string) (s
 // runAgentLoop calls the LLM with tool-calling enabled, executing any tool calls,
 // and repeats until the model returns a final text response (max 5 iterations).
 func (f *Factory) runAgentLoop(ctx context.Context, userMessage string) (string, error) {
+	// Vertex AI doesn't support a separate system role — prepend the system
+	// prompt to the first human message instead.
 	messages := []llms.MessageContent{
-		llms.TextParts(llms.ChatMessageTypeSystem, systemPrompt),
-		llms.TextParts(llms.ChatMessageTypeHuman, userMessage),
+		llms.TextParts(llms.ChatMessageTypeHuman, systemPrompt+"\n\n"+userMessage),
 	}
 
 	for range 5 {
