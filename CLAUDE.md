@@ -3,19 +3,31 @@
 ## Project Overview
 An autonomous AI agent that monitors EV battery health and auto-files Jira tickets when safety thresholds are breached.
 
-**Stack:** Java, LangChain4j, Google Vertex AI (Gemini 2.0 Flash + text-embedding-004), Atlassian Jira REST API, Javalin HTTP, Gradle
+**Stack:** Go, tmc/langchaingo, Google Vertex AI (Gemini 2.0 Flash + text-embedding-004), Atlassian Jira REST API, Bubble Tea TUI, net/http server
 
-## Architecture
-- **`App.java`** — Entry point. Initializes `AgentFactory`, then runs interactive mode or HTTP server based on args.
-- **`AgentFactory.java`** — Initializes shared expensive resources (models, embedding store) once at startup. `newAgent()` returns a fresh `EvExpert` with clean chat memory — call per request.
-- **`EvExpert.java`** — LangChain4j `AiService` interface defining the agent's chat contract and system prompt.
-- **`JiraTicketingTool.java`** — `@Tool`-annotated method the agent calls to POST a Jira issue via REST API (Jira Cloud, Atlassian Document Format body). Supports severity-based priority and issue type.
-- **`BatteryTelemetry.java`** — POJO for structured telemetry: `vin`, `batteryTempC`, `voltageV`, `stateOfChargePercent` (nullable), `drivingMode`, `timestamp`.
-- **`TelemetryParser.java`** — Parses telemetry from JSON or CSV into `BatteryTelemetry`. Validates ranges before hitting the agent.
-- **`BatteryServer.java`** — Javalin HTTP server. `POST /analyze` accepts telemetry, `GET /health` is liveness check.
+> Legacy Java implementation is still present (src/, build.gradle) but the primary codebase is now Go.
+
+## Architecture (Go)
+
+```
+cmd/ev-battery-agent/main.go   — entry point (TUI mode or --server mode)
+internal/
+  agent/
+    factory.go   — AgentFactory: LLM init, RAG retrieval, tool-calling loop
+    store.go     — in-memory vector store with cosine similarity + JSON cache
+    docs.go      — PDF loading, text chunking, battery-keyword filtering
+  jira/
+    client.go    — Jira REST client: file ticket + deduplication JQL search
+  telemetry/
+    telemetry.go — BatteryTelemetry struct + JSON/CSV parser + validate
+  server/
+    server.go    — HTTP server: POST /analyze, GET /health
+  tui/
+    tui.go       — Bubble Tea TUI (viewport + textinput + spinner + lipgloss)
+```
 
 ## RAG Setup
-Documents in `docs/` (EV manuals, safety specs) are chunked (500 tokens, 50 overlap) and embedded at startup into an `InMemoryEmbeddingStore`. Top-5 segments are retrieved per query.
+PDFs in `docs/R1S/` and `docs/R1T/` are loaded, chunked (~300 words, 30 overlap), and filtered to battery-relevant chunks (battery, thermal, voltage, etc.). Embeddings are cached in `embeddings/go_R1S.json` and `embeddings/go_R1T.json` — first run re-embeds, subsequent runs load from disk (~3s startup).
 
 ## Environment Variables (`.env`)
 | Variable | Purpose |
@@ -28,14 +40,17 @@ Documents in `docs/` (EV manuals, safety specs) are chunked (500 tokens, 50 over
 
 ## Build & Run
 ```bash
-# Interactive mode (stdin loop)
-./gradlew run
+# Build binary
+go build -o ev-battery-agent-go ./cmd/ev-battery-agent/
+
+# Launch Bubble Tea TUI
+./ev-battery-agent-go
 
 # HTTP server mode on port 8080
-./gradlew run --args="--server"
+./ev-battery-agent-go --server
 
 # HTTP server on custom port
-./gradlew run --args="--server 9090"
+./ev-battery-agent-go --server 9090
 ```
 
 ### REST API
@@ -55,11 +70,14 @@ curl http://localhost:8080/health
 ```
 
 ## Key Design Decisions
-- Model: `gemini-2.0-flash` with `temperature=0.0` for deterministic safety analysis
-- Jira issue type: `Bug` for CRITICAL, `Task` for WARNING/INFO; priority maps to Highest/High/Medium
-- `AgentFactory` is initialized once (expensive PDF embedding); `newAgent()` is cheap and called per request
-- Each HTTP request gets a fresh agent with clean memory — no cross-request state leakage
-- Interactive mode reuses a single agent across turns so chat memory carries over
+- Model: `gemini-2.0-flash-001` at temperature 0 for deterministic safety analysis
+- Tool calling: manual agent loop (GenerateContent → handle ToolCalls → add ToolCallResponse → repeat) — max 5 iterations
+- RAG: embed query → cosine similarity search → prepend top-5 chunks to user message
+- Jira deduplication: JQL search before filing — skips if open ticket for VIN exists
+- Jira severity routing: CRITICAL/EMERGENCY → Bug/Highest, WARNING → Task/High, INFO → Task/Medium
+- Embedding cache: custom JSON format (`go-v1`) at `embeddings/go_R1S.json` / `embeddings/go_R1T.json`
+- Vehicle routing: R1S → docs/R1S, R1T → docs/R1T (detected from free text in TUI, from VIN in server mode)
+- TUI: Bubble Tea with AltScreen, viewport for scrollable output, textinput, spinner, lipgloss styling
 
 ## Workflow Instruction
-**Commit after every feature or meaningful change before continuing to the next.** Use `./gradlew compileJava` to verify before committing.
+**Commit after every feature or meaningful change before continuing to the next.** Use `go build ./...` to verify before committing.
