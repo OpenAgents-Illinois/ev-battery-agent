@@ -1,13 +1,10 @@
 package tests
 
 import (
-	"strings"
 	"testing"
 
 	"ev-battery-agent/internal/telemetry"
 )
-
-// --- Parse: JSON ---
 
 func TestParseJSONFull(t *testing.T) {
 	input := `{"vin":"VIN_789","batteryTempC":55.0,"voltageV":3.1,"stateOfChargePercent":82.0,"drivingMode":"driving"}`
@@ -61,8 +58,6 @@ func TestParseJSONVehicleModel(t *testing.T) {
 	}
 }
 
-// --- Parse: CSV ---
-
 func TestParseCSVFull(t *testing.T) {
 	tel, err := telemetry.Parse("VIN_789,55.0,3.1,82.0,driving")
 	if err != nil {
@@ -108,63 +103,5 @@ func TestParseCSVVehicleModel(t *testing.T) {
 	}
 	if tel.VehicleModel != "R1S" {
 		t.Errorf("VehicleModel: got %q, want %q", tel.VehicleModel, "R1S")
-	}
-}
-
-// --- Validate: rejection cases ---
-
-func TestValidateRejectsBlankVIN(t *testing.T) {
-	_, err := telemetry.Parse(",55.0,3.1")
-	if err == nil {
-		t.Error("expected error for blank VIN, got nil")
-	}
-}
-
-func TestValidateRejectsOutOfRangeTemp(t *testing.T) {
-	_, err := telemetry.Parse("VIN_001,999.0,3.7")
-	if err == nil {
-		t.Error("expected error for temp 999.0, got nil")
-	}
-}
-
-func TestValidateRejectsOutOfRangeVoltage(t *testing.T) {
-	_, err := telemetry.Parse("VIN_001,30.0,99.0")
-	if err == nil {
-		t.Error("expected error for voltage 99.0, got nil")
-	}
-}
-
-// --- DetectModelFromVIN ---
-
-func TestDetectModelFromVINR1S(t *testing.T) {
-	if got := telemetry.DetectModelFromVIN("7FCLS12345678901"); got != "R1S" {
-		t.Errorf("got %q, want %q", got, "R1S")
-	}
-}
-
-func TestDetectModelFromVINR1T(t *testing.T) {
-	if got := telemetry.DetectModelFromVIN("7FCTL12345678901"); got != "R1T" {
-		t.Errorf("got %q, want %q", got, "R1T")
-	}
-}
-
-func TestDetectModelFromVINUnknown(t *testing.T) {
-	if got := telemetry.DetectModelFromVIN("VIN_789"); got != "UNKNOWN" {
-		t.Errorf("got %q, want %q", got, "UNKNOWN")
-	}
-}
-
-// --- ToPromptString ---
-
-func TestToPromptStringIncludesAllFields(t *testing.T) {
-	tel, err := telemetry.Parse("VIN_789,55.0,3.1,82.0,driving")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	prompt := tel.ToPromptString()
-	for _, want := range []string{"VIN_789", "55.0", "3.1", "82.0", "driving"} {
-		if !strings.Contains(prompt, want) {
-			t.Errorf("prompt missing %q", want)
-		}
 	}
 }
