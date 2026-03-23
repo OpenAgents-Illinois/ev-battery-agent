@@ -31,23 +31,23 @@ public class JiraTicketingTool {
 
         String jsonPayload = """
         {
-        "fields": {
-            "project": { "key": "%s" },
-            "summary": "EV Battery Alert: %s (VIN: %s)",
-            "issuetype": { "name": "Bug" },
-            "description": {
-            "type": "doc",
-            "version": 1,
-            "content": [
-                {
-                "type": "paragraph",
+            "fields": {
+                "project": { "key": "%s" },
+                "summary": "EV Battery Alert: %s (VIN: %s)",
+                "issuetype": { "name": "Bug" },
+                "description": {
+                "type": "doc",
+                "version": 1,
                 "content": [
-                    { "type": "text", "text": "Reasoning: %s" }
+                    {
+                    "type": "paragraph",
+                    "content": [
+                        { "type": "text", "text": "Reasoning: %s" }
+                    ]
+                    }
                 ]
                 }
-            ]
             }
-        }
         }
         """.formatted(PROJECT_KEY, defectType, vin, technicalReason);
 
