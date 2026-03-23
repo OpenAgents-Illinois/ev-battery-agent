@@ -3,7 +3,7 @@
 ## Project Overview
 An autonomous AI agent that monitors EV battery health and auto-files Jira tickets when safety thresholds are breached.
 
-**Stack:** Go, tmc/langchaingo, Google Vertex AI (Gemini 2.0 Flash + text-embedding-004), Atlassian Jira REST API, Bubble Tea TUI, net/http server
+**Stack:** Go 1.22, tmc/langchaingo, Google Vertex AI (Gemini 2.0 Flash + text-embedding-004), andygrunwald/go-jira, Bubble Tea TUI, net/http server
 
 ## Architecture
 
@@ -11,26 +11,35 @@ An autonomous AI agent that monitors EV battery health and auto-files Jira ticke
 main.go                        — entry point (TUI mode or --server mode)
 internal/
   agent/
-    factory.go   — AgentFactory: LLM init, RAG retrieval, tool-calling loop
-    store.go     — in-memory vector store with cosine similarity + JSON cache
+    factory.go   — Factory struct, NewFactory, buildStore (init/startup)
+    chat.go      — Chat (RAG retrieval) + runAgentLoop (LLM tool-calling loop)
+    prompts.go   — systemPrompt, InteractivePrompt, DetectModel
+    store.go     — cosine similarity vector store + JSON disk cache
     docs.go      — PDF loading, text chunking, battery-keyword filtering
   jira/
-    client.go    — Jira REST client: file ticket + deduplication JQL search
+    client.go    — Client struct, NewClient (go-jira wrapper + auth)
+    ticket.go    — FileTicket (create Jira issue)
+    search.go    — findExistingTicket (JQL deduplication)
+    helpers.go   — severityToIssueType, severityToPriority, sanitize
   telemetry/
-    telemetry.go — BatteryTelemetry struct + JSON/CSV parser + validate
+    telemetry.go — BatteryTelemetry struct, Validate, DetectModelFromVIN
+    parser.go    — Parse, parseJSON, parseCSV
+    prompt.go    — ToPromptString (plain-English prompt builder)
   server/
-    server.go    — HTTP server: POST /analyze, GET /health
+    server.go    — Start (register routes, listen)
+    handlers.go  — healthHandler, analyzeHandler
+    response.go  — analysisResponse, errorResponse, writeJSON
   tui/
-    tui.go       — Start() entry point
-    model.go     — model struct, newModel(), Init()
-    update.go    — Update(), submit(), state helpers
-    view.go      — View(), renderLines(), renderStatus(), wordWrap()
+    tui.go       — Start (Bubble Tea program entry point)
+    model.go     — model struct, newModel, Init
+    update.go    — Update, submit, state helpers
+    view.go      — View, renderLines, renderStatus, wordWrap
     styles.go    — lipgloss style definitions
-    messages.go  — tea message types
+    messages.go  — agentResultMsg, agentErrMsg
 ```
 
 ## RAG Setup
-PDFs in `docs/R1S/` and `docs/R1T/` are loaded, chunked (~300 words, 30 overlap), and filtered to battery-relevant chunks (battery, thermal, voltage, etc.). Embeddings are cached in `embeddings/go_R1S.json` and `embeddings/go_R1T.json` — first run re-embeds, subsequent runs load from disk (~3s startup).
+PDFs in `docs/R1S/` and `docs/R1T/` are loaded, chunked (~300 words, 30-word overlap), and filtered to battery-relevant chunks. Embeddings are cached in `embeddings/` (git-ignored) — first run embeds via Vertex AI, subsequent runs load from disk.
 
 ## Environment Variables (`.env`)
 | Variable | Purpose |
@@ -43,32 +52,22 @@ PDFs in `docs/R1S/` and `docs/R1T/` are loaded, chunked (~300 words, 30 overlap)
 
 ## Build & Run
 ```bash
-# Build binary
 go build -o ev-battery-agent .
-
-# Launch Bubble Tea TUI
-./ev-battery-agent
-
-# HTTP server mode on port 8080
-./ev-battery-agent --server
-
-# HTTP server on custom port
+./ev-battery-agent             # Bubble Tea TUI
+./ev-battery-agent --server    # HTTP server on :8080
 ./ev-battery-agent --server 9090
 ```
 
 ### REST API
 ```bash
-# Analyze telemetry (JSON body)
 curl -X POST http://localhost:8080/analyze \
   -H "Content-Type: application/json" \
   -d '{"vin":"VIN_789","batteryTempC":55.0,"voltageV":3.1,"stateOfChargePercent":82.0,"drivingMode":"driving"}'
 
-# Analyze telemetry (CSV body)
 curl -X POST http://localhost:8080/analyze \
   -H "Content-Type: text/plain" \
   -d 'VIN_789,55.0,3.1,82.0,driving'
 
-# Health check
 curl http://localhost:8080/health
 ```
 
@@ -76,11 +75,11 @@ curl http://localhost:8080/health
 - Model: `gemini-2.0-flash-001` at temperature 0 for deterministic safety analysis
 - Tool calling: manual agent loop (GenerateContent → handle ToolCalls → add ToolCallResponse → repeat) — max 5 iterations
 - RAG: embed query → cosine similarity search → prepend top-5 chunks to user message
-- Jira deduplication: JQL search before filing — skips if open ticket for VIN exists
+- Jira: go-jira library (andygrunwald/go-jira) — deduplication via JQL search before filing
 - Jira severity routing: CRITICAL/EMERGENCY → Bug/Highest, WARNING → Task/High, INFO → Task/Medium
-- Embedding cache: custom JSON format (`go-v1`) at `embeddings/go_R1S.json` / `embeddings/go_R1T.json`
-- Vehicle routing: R1S → docs/R1S, R1T → docs/R1T (detected from free text in TUI, from VIN in server mode)
-- TUI: Bubble Tea with AltScreen, viewport for scrollable output, textinput, spinner, lipgloss styling
+- Embedding cache: custom JSON format (`go-v1`) in `embeddings/` — git-ignored, auto-regenerated
+- Vehicle routing: R1S → docs/R1S, R1T → docs/R1T (free-text detection in TUI, VIN prefix in server mode)
+- TUI: Bubble Tea with AltScreen, viewport, textinput, spinner, lipgloss
 
 ## Workflow Instruction
 **Commit after every feature or meaningful change before continuing to the next.** Use `go build ./...` to verify before committing.
