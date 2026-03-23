@@ -36,3 +36,14 @@ func sanitize(s string) string {
 	s = strings.ReplaceAll(s, "°", " degrees")
 	return strings.TrimSpace(s)
 }
+
+func severityToLabel(severity string) string {
+	switch severity {
+	case "CRITICAL", "EMERGENCY":
+		return "severity-critical"
+	case "WARNING":
+		return "severity-warning"
+	default:
+		return "severity-info"
+	}
+}

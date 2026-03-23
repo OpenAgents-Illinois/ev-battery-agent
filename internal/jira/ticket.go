@@ -36,6 +36,7 @@ func (c *Client) FileTicket(argsJSON string) string {
 
 	issueType := severityToIssueType(args.Severity)
 	priority := severityToPriority(args.Severity)
+	labels := []string{"ev-battery-agent", "ev-battery", severityToLabel(args.Severity)}
 
 	issue := &jiralib.Issue{
 		Fields: &jiralib.IssueFields{
@@ -44,6 +45,7 @@ func (c *Client) FileTicket(argsJSON string) string {
 			Type:        jiralib.IssueType{Name: issueType},
 			Priority:    &jiralib.Priority{Name: priority},
 			Description: "Reasoning: " + args.TechnicalReason,
+			Labels:      labels,
 		},
 	}
 
@@ -51,5 +53,5 @@ func (c *Client) FileTicket(argsJSON string) string {
 	if err != nil {
 		return "FAILED: Could not create Jira issue: " + err.Error()
 	}
-	return fmt.Sprintf("SUCCESS: Ticket created with Key: %s [%s / %s priority]", created.Key, issueType, priority)
+	return fmt.Sprintf("SUCCESS: Ticket created with Key: %s [%s / %s priority, labels=%s]", created.Key, issueType, priority, strings.Join(labels, ","))
 }
