@@ -79,8 +79,10 @@ func (f *Factory) runAgentLoop(ctx context.Context, userMessage string) (string,
 		// Vertex/Gemini requires function response parts to match the function call
 		// parts from the immediately preceding assistant turn.
 		toolParts := make([]llms.ContentPart, 0, len(choice.ToolCalls))
+		toolResults := make([]string, 0, len(choice.ToolCalls))
 		for _, tc := range choice.ToolCalls {
 			result := f.dispatchTool(tc.FunctionCall.Name, tc.FunctionCall.Arguments)
+			toolResults = append(toolResults, result)
 			toolParts = append(toolParts, llms.ToolCallResponse{
 				ToolCallID: tc.ID,
 				Name:       tc.FunctionCall.Name,
@@ -92,6 +94,12 @@ func (f *Factory) runAgentLoop(ctx context.Context, userMessage string) (string,
 				Role:  llms.ChatMessageTypeTool,
 				Parts: toolParts,
 			})
+		}
+
+		// Avoid retry loops: when tools return terminal outcomes, surface them
+		// immediately instead of waiting for another model turn.
+		if summary := summarizeTerminalToolResults(choice.Content, toolResults); summary != "" {
+			return summary, nil
 		}
 	}
 
@@ -106,4 +114,28 @@ func (f *Factory) dispatchTool(name, argsJSON string) string {
 	default:
 		return "ERROR: Unknown tool: " + name
 	}
+}
+
+func summarizeTerminalToolResults(analysis string, results []string) string {
+	if len(results) == 0 {
+		return ""
+	}
+	for _, r := range results {
+		if !isTerminalToolResult(r) {
+			return ""
+		}
+	}
+	outcome := strings.Join(results, " | ")
+	analysis = strings.TrimSpace(analysis)
+	if analysis == "" {
+		return outcome
+	}
+	return analysis + "\n\nTool outcome: " + outcome
+}
+
+func isTerminalToolResult(s string) bool {
+	return strings.HasPrefix(s, "SUCCESS:") ||
+		strings.HasPrefix(s, "SKIPPED:") ||
+		strings.HasPrefix(s, "FAILED:") ||
+		strings.HasPrefix(s, "ERROR:")
 }
