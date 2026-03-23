@@ -28,6 +28,8 @@ type model struct {
 func newModel(f *agent.Factory) model {
 	ti := textinput.New()
 	ti.Placeholder = "Describe the battery issue (e.g. R1S VIN ABC123 temp 65C voltage 2.8V)..."
+	ti.PlaceholderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
+	ti.PromptStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("230"))
 	ti.Focus()
 	ti.CharLimit = 512
 	ti.Width = 60

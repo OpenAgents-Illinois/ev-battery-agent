@@ -14,7 +14,7 @@ var (
 
 	borderStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("238"))
+			BorderForeground(lipgloss.Color("242"))
 
 	inputBorderStyle = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder()).
@@ -51,5 +51,5 @@ var (
 			Foreground(lipgloss.Color("196"))
 
 	dimStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("240"))
+			Foreground(lipgloss.Color("244"))
 )
