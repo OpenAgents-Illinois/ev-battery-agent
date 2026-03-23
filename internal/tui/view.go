@@ -17,7 +17,6 @@ func (m model) View() string {
 		Width(m.width - 2).
 		Render(m.viewport.View())
 
-	inputLabel := dimStyle.Render(" Describe the battery issue — press Enter to analyze ")
 	inputBox := inputBorderStyle.Width(m.width - 4).Render(m.textinput.View())
 
 	vehicleText := vehicleStyle.Render(fmt.Sprintf("  Vehicle: %s  ", m.vehicle))
@@ -30,7 +29,6 @@ func (m model) View() string {
 		subHeader,
 		"",
 		conversation,
-		inputLabel,
 		inputBox,
 		statusBar,
 	}, "\n")
