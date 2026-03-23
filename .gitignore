@@ -50,3 +50,9 @@ gradle-app.setting
 .env
 target/
 bin/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
