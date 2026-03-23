@@ -2,8 +2,7 @@ package agent
 
 import (
 	"fmt"
-	"io"
-	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -21,9 +20,9 @@ var batteryKeywords = []string{
 	"coolant", "bms", "state of charge", "soc", "degradation", "fire",
 }
 
-// loadAndChunkDocs loads all PDFs from docsDir within fsys, chunks them, and filters to battery-relevant chunks.
-func loadAndChunkDocs(fsys fs.FS, docsDir string) ([]textChunk, error) {
-	entries, err := fs.ReadDir(fsys, docsDir)
+// loadAndChunkDocs loads all PDFs from docsDir, chunks them, and filters to battery-relevant chunks.
+func loadAndChunkDocs(docsDir string) ([]textChunk, error) {
+	entries, err := os.ReadDir(docsDir)
 	if err != nil {
 		return nil, fmt.Errorf("read docs dir %s: %w", docsDir, err)
 	}
@@ -34,7 +33,7 @@ func loadAndChunkDocs(fsys fs.FS, docsDir string) ([]textChunk, error) {
 			continue
 		}
 		path := filepath.Join(docsDir, entry.Name())
-		text, err := extractPDFTextFS(fsys, path)
+		text, err := extractPDFText(path)
 		if err != nil {
 			fmt.Printf("  Warning: could not read %s: %v\n", entry.Name(), err)
 			continue
@@ -53,30 +52,13 @@ func loadAndChunkDocs(fsys fs.FS, docsDir string) ([]textChunk, error) {
 	return filtered, nil
 }
 
-// extractPDFTextFS reads all text from a PDF file within an fs.FS.
-func extractPDFTextFS(fsys fs.FS, path string) (string, error) {
-	file, err := fsys.Open(path)
+// extractPDFText reads all text from a PDF file.
+func extractPDFText(path string) (string, error) {
+	f, r, err := pdf.Open(path)
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
-
-	info, err := file.Stat()
-	if err != nil {
-		return "", err
-	}
-
-	ra, ok := file.(interface {
-		io.ReaderAt
-	})
-	if !ok {
-		return "", fmt.Errorf("file does not support ReadAt: %s", path)
-	}
-
-	r, err := pdf.NewReader(ra, info.Size())
-	if err != nil {
-		return "", err
-	}
+	defer f.Close()
 
 	var sb strings.Builder
 	for i := 1; i <= r.NumPage(); i++ {

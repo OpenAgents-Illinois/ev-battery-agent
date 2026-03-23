@@ -28,7 +28,7 @@ func main() {
 	fmt.Println("Loading EV Battery Agent...")
 
 	ctx := context.Background()
-	factory, err := agent.NewFactory(ctx, projectID, "us-central1", docsFS)
+	factory, err := agent.NewFactory(ctx, projectID, "us-central1")
 	if err != nil {
 		log.Fatalf("Failed to initialize agent: %v", err)
 	}

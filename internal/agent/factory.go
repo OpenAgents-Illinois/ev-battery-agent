@@ -3,7 +3,6 @@ package agent
 import (
 	"context"
 	"fmt"
-	"io/fs"
 
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/googleai"
@@ -46,8 +45,7 @@ var jiraToolDef = llms.Tool{
 }
 
 // NewFactory connects to Vertex AI and loads (or creates) per-vehicle embedding stores.
-// docsFS is an fs.FS containing the docs/ directory (typically the embedded FS from main).
-func NewFactory(ctx context.Context, projectID, location string, docsFS fs.FS) (*Factory, error) {
+func NewFactory(ctx context.Context, projectID, location string) (*Factory, error) {
 	llm, err := vertex.New(ctx,
 		googleai.WithCloudProject(projectID),
 		googleai.WithCloudLocation(location),
@@ -64,7 +62,7 @@ func NewFactory(ctx context.Context, projectID, location string, docsFS fs.FS) (
 
 	stores := make(map[string]*vectorStore)
 	for _, model := range []string{"R1S", "R1T"} {
-		store, err := buildStore(ctx, embedFn, docsFS, "docs/"+model, fmt.Sprintf("embeddings/go_%s.json", model))
+		store, err := buildStore(ctx, embedFn, "docs/"+model, fmt.Sprintf("embeddings/go_%s.json", model))
 		if err != nil {
 			return nil, fmt.Errorf("build store for %s: %w", model, err)
 		}
@@ -75,14 +73,14 @@ func NewFactory(ctx context.Context, projectID, location string, docsFS fs.FS) (
 }
 
 // buildStore loads embeddings from cache if present, otherwise embeds the docs and saves the cache.
-func buildStore(ctx context.Context, embedFn embedderFunc, docsFS fs.FS, docsDir, cachePath string) (*vectorStore, error) {
+func buildStore(ctx context.Context, embedFn embedderFunc, docsDir, cachePath string) (*vectorStore, error) {
 	if store, err := loadCache(cachePath); err == nil {
 		fmt.Printf("Loading embedding cache: %s (%d chunks)\n", cachePath, len(store.entries))
 		return store, nil
 	}
 
 	fmt.Printf("No cache for %s — embedding now (one-time)...\n", docsDir)
-	chunks, err := loadAndChunkDocs(docsFS, docsDir)
+	chunks, err := loadAndChunkDocs(docsDir)
 	if err != nil {
 		return nil, fmt.Errorf("load docs: %w", err)
 	}
