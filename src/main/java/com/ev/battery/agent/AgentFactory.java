@@ -37,11 +37,14 @@ public class AgentFactory {
             .topP(0.95f)
             .build();
 
+        // maxSegmentsPerBatch: text-embedding-004 caps at 20k tokens/batch.
+        // At 300 tokens/chunk, 20 segments = ~6,000 tokens/batch — safely under the limit.
         VertexAiEmbeddingModel embeddingModel = VertexAiEmbeddingModel.builder()
             .project(projectId)
             .location(location)
             .modelName("text-embedding-004")
             .publisher("google")
+            .maxSegmentsPerBatch(20)
             .build();
 
         this.retrievers = Map.of(
@@ -71,7 +74,7 @@ public class AgentFactory {
     private ContentRetriever buildRetriever(VertexAiEmbeddingModel embeddingModel, String docsPath) {
         InMemoryEmbeddingStore<TextSegment> store = new InMemoryEmbeddingStore<>();
         EmbeddingStoreIngestor.builder()
-            .documentSplitter(DocumentSplitters.recursive(500, 50))
+            .documentSplitter(DocumentSplitters.recursive(300, 30))
             .embeddingModel(embeddingModel)
             .embeddingStore(store)
             .build()
