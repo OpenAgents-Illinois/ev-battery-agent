@@ -14,7 +14,7 @@ class BatteryAgentTest {
     void testOverheatingScenario() throws DotenvException {
         Dotenv dotenv = Dotenv.configure().load();
         String projectId = dotenv.get("GCLOUD_PROJECT_ID");
-        EvExpert agent = new AgentFactory(projectId, "us-central1").newAgent();
+        EvExpert agent = new AgentFactory(projectId, "us-central1").newAgent("UNKNOWN");
 
         String telemetry = "VIN_789, Temp: 58C, Voltage: 3.1V, Status: Driving.";
         

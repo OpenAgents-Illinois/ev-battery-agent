@@ -62,6 +62,34 @@ class TelemetryParserTest {
     }
 
     @Test
+    void testVehicleModelFromJson() {
+        BatteryTelemetry t = TelemetryParser.parse(
+            "{\"vin\":\"VIN_789\",\"batteryTempC\":30.0,\"voltageV\":3.7,\"vehicleModel\":\"R1T\"}");
+        assertEquals("R1T", t.vehicleModel);
+    }
+
+    @Test
+    void testVehicleModelFromCsv() {
+        BatteryTelemetry t = TelemetryParser.parse("VIN_789,30.0,3.7,,,R1S");
+        assertEquals("R1S", t.vehicleModel);
+    }
+
+    @Test
+    void testVinAutoDetectR1S() {
+        assertEquals("R1S", BatteryTelemetry.detectModelFromVin("7FCLS12345678901"));
+    }
+
+    @Test
+    void testVinAutoDetectR1T() {
+        assertEquals("R1T", BatteryTelemetry.detectModelFromVin("7FCTL12345678901"));
+    }
+
+    @Test
+    void testVinAutoDetectUnknown() {
+        assertEquals("UNKNOWN", BatteryTelemetry.detectModelFromVin("VIN_789"));
+    }
+
+    @Test
     void testToPromptStringIncludesAllFields() {
         BatteryTelemetry t = TelemetryParser.parse("VIN_789,55.0,3.1,82.0,driving");
         String prompt = t.toPromptString();

@@ -42,7 +42,7 @@ public class BatteryServer {
                 return;
             }
 
-            EvExpert agent = factory.newAgent();
+            EvExpert agent = factory.newAgent(telemetry.vehicleModel);
             String analysis = agent.chat(ANALYZE_PROMPT.formatted(telemetry.toPromptString()));
 
             ctx.contentType("application/json")

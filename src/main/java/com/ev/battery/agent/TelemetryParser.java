@@ -9,8 +9,8 @@ import com.google.gson.JsonSyntaxException;
  * JSON example:
  *   {"vin":"VIN_789","batteryTempC":55.0,"voltageV":3.1,"stateOfChargePercent":82.0,"drivingMode":"driving"}
  *
- * CSV example (columns: vin, batteryTempC, voltageV [,stateOfChargePercent] [,drivingMode]):
- *   VIN_789,55.0,3.1,82.0,driving
+ * CSV example (columns: vin, batteryTempC, voltageV [,stateOfChargePercent] [,drivingMode] [,vehicleModel]):
+ *   VIN_789,55.0,3.1,82.0,driving,R1S
  *   VIN_789,55.0,3.1
  */
 public class TelemetryParser {
@@ -53,6 +53,8 @@ public class TelemetryParser {
                 t.stateOfChargePercent = Double.parseDouble(parts[3].trim());
             if (parts.length >= 5 && !parts[4].isBlank())
                 t.drivingMode = parts[4].trim();
+            if (parts.length >= 6 && !parts[5].isBlank())
+                t.vehicleModel = parts[5].trim();
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("CSV number parse error: " + e.getMessage());
         }

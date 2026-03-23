@@ -28,10 +28,10 @@ public class App {
     }
 
     private static void runInteractive(AgentFactory factory) {
-        EvExpert agent = factory.newAgent();
         System.out.println("Paste telemetry as JSON or CSV, or type 'exit' to quit.");
-        System.out.println("  JSON: {\"vin\":\"VIN_789\",\"batteryTempC\":55.0,\"voltageV\":3.1,\"stateOfChargePercent\":82.0,\"drivingMode\":\"driving\"}");
-        System.out.println("  CSV:  VIN_789,55.0,3.1,82.0,driving   (vin,tempC,voltageV[,soc%][,mode])");
+        System.out.println("  JSON: {\"vin\":\"VIN_789\",\"batteryTempC\":55.0,\"voltageV\":3.1,\"stateOfChargePercent\":82.0,\"drivingMode\":\"driving\",\"vehicleModel\":\"R1S\"}");
+        System.out.println("  CSV:  VIN_789,55.0,3.1,82.0,driving,R1S   (vin,tempC,voltageV[,soc%][,mode][,model])");
+        System.out.println("  vehicleModel is auto-detected from Rivian VINs if omitted.");
         System.out.println();
 
         Scanner scanner = new Scanner(System.in);
@@ -54,6 +54,7 @@ public class App {
                 continue;
             }
 
+            EvExpert agent = factory.newAgent(telemetry.vehicleModel);
             String result = agent.chat(ANALYZE_PROMPT.formatted(telemetry.toPromptString()));
             System.out.println(result);
             System.out.println();
