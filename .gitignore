@@ -60,4 +60,5 @@ bin/
 # Embedding caches are committed to git — delete folder and re-run to rebuild
 
 # Go binary
-ev-battery-agentev-battery-agent-go
+ev-battery-agent
+ev-battery-agent-go
