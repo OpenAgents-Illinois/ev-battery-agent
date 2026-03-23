@@ -3,9 +3,9 @@ package jira
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"strings"
+
+	jiralib "github.com/andygrunwald/go-jira"
 )
 
 // FileTicket parses LLM tool call arguments JSON and creates a Jira issue.
@@ -37,55 +37,19 @@ func (c *Client) FileTicket(argsJSON string) string {
 	issueType := severityToIssueType(args.Severity)
 	priority := severityToPriority(args.Severity)
 
-	payload := map[string]any{
-		"fields": map[string]any{
-			"project":   map[string]string{"key": c.projectKey},
-			"summary":   fmt.Sprintf("[%s] EV Battery Alert: %s (VIN: %s)", args.Severity, args.DefectType, args.VIN),
-			"issuetype": map[string]string{"name": issueType},
-			"priority":  map[string]string{"name": priority},
-			"description": map[string]any{
-				"type":    "doc",
-				"version": 1,
-				"content": []any{
-					map[string]any{
-						"type":    "paragraph",
-						"content": []any{map[string]string{"type": "text", "text": "Reasoning: " + args.TechnicalReason}},
-					},
-				},
-			},
+	issue := &jiralib.Issue{
+		Fields: &jiralib.IssueFields{
+			Project:     jiralib.Project{Key: c.projectKey},
+			Summary:     fmt.Sprintf("[%s] EV Battery Alert: %s (VIN: %s)", args.Severity, args.DefectType, args.VIN),
+			Type:        jiralib.IssueType{Name: issueType},
+			Priority:    &jiralib.Priority{Name: priority},
+			Description: "Reasoning: " + args.TechnicalReason,
 		},
 	}
 
-	body, err := json.Marshal(payload)
+	created, _, err := c.api.Issue.Create(issue)
 	if err != nil {
-		return "ERROR: Failed to marshal Jira payload: " + err.Error()
+		return "FAILED: Could not create Jira issue: " + err.Error()
 	}
-
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/rest/api/3/issue", c.domain), strings.NewReader(string(body)))
-	if err != nil {
-		return "ERROR: " + err.Error()
-	}
-	req.Header.Set("Authorization", "Basic "+c.encodedAuth())
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "ERROR: Could not connect to Jira: " + err.Error()
-	}
-	defer resp.Body.Close()
-
-	respBody, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != 201 {
-		return fmt.Sprintf("FAILED: Jira API returned %d. Error: %s", resp.StatusCode, string(respBody))
-	}
-
-	var result map[string]any
-	ticketKey := "UNKNOWN"
-	if err := json.Unmarshal(respBody, &result); err == nil {
-		if key, ok := result["key"].(string); ok {
-			ticketKey = key
-		}
-	}
-	return fmt.Sprintf("SUCCESS: Ticket created with Key: %s [%s / %s priority]", ticketKey, issueType, priority)
+	return fmt.Sprintf("SUCCESS: Ticket created with Key: %s [%s / %s priority]", created.Key, issueType, priority)
 }

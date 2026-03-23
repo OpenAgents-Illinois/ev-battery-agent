@@ -1,32 +1,38 @@
 package jira
 
 import (
-	"encoding/base64"
+	"fmt"
 	"os"
+
+	jiralib "github.com/andygrunwald/go-jira"
 )
 
-// Client handles Jira REST API calls. Config is read from environment at construction time.
+// Client wraps the go-jira client with project-specific config.
 type Client struct {
-	domain     string
-	email      string
-	token      string
+	api        *jiralib.Client
 	projectKey string
 }
 
-// NewClient reads Jira config from environment variables.
+// NewClient reads Jira config from environment variables and returns a ready client.
+// Returns a no-op client if config is missing (FileTicket will return an error message).
 func NewClient() *Client {
-	return &Client{
-		domain:     os.Getenv("JIRA_DOMAIN"),
-		email:      os.Getenv("JIRA_EMAIL"),
-		token:      os.Getenv("JIRA_TOKEN"),
-		projectKey: os.Getenv("JIRA_SPACE_KEY"),
-	}
-}
+	domain := os.Getenv("JIRA_DOMAIN")
+	email := os.Getenv("JIRA_EMAIL")
+	token := os.Getenv("JIRA_TOKEN")
+	projectKey := os.Getenv("JIRA_SPACE_KEY")
 
-func (c *Client) encodedAuth() string {
-	return base64.StdEncoding.EncodeToString([]byte(c.email + ":" + c.token))
+	if domain == "" || email == "" || token == "" || projectKey == "" {
+		return &Client{}
+	}
+
+	tp := jiralib.BasicAuthTransport{Username: email, Password: token}
+	api, err := jiralib.NewClient(tp.Client(), fmt.Sprintf("https://%s", domain))
+	if err != nil {
+		return &Client{}
+	}
+	return &Client{api: api, projectKey: projectKey}
 }
 
 func (c *Client) isConfigured() bool {
-	return c.domain != "" && c.email != "" && c.token != "" && c.projectKey != ""
+	return c.api != nil && c.projectKey != ""
 }

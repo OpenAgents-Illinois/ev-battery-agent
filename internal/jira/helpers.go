@@ -1,6 +1,13 @@
 package jira
 
-import "strings"
+import (
+	"strings"
+
+	jiralib "github.com/andygrunwald/go-jira"
+)
+
+// jiraSearchOptions used for deduplication searches.
+var jiraSearchOptions = jiralib.SearchOptions{MaxResults: 1, Fields: []string{"key", "summary"}}
 
 func severityToIssueType(severity string) string {
 	switch severity {
