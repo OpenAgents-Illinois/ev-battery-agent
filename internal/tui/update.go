@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 
 	"ev-battery-agent/internal/agent"
 )
@@ -26,7 +27,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if vpHeight < 5 {
 			vpHeight = 5
 		}
-		vpWidth := m.width - 4
+		vpOuterWidth := m.width - 2
+		if vpOuterWidth < 3 {
+			vpOuterWidth = 3
+		}
+		vpWidth := vpOuterWidth - borderStyle.GetHorizontalFrameSize()
+		if vpWidth < 1 {
+			vpWidth = 1
+		}
 		if !m.ready {
 			m.viewport = viewport.New(vpWidth, vpHeight)
 			m.viewport.SetContent(m.renderLines())
@@ -35,7 +43,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport.Width = vpWidth
 			m.viewport.Height = vpHeight
 		}
-		m.textinput.Width = vpWidth - 4
+
+		// Keep the text input strictly within its bordered container.
+		// Reserve room for prompt and cursor so typing never wraps this row.
+		inputOuterWidth := m.width - 2
+		if inputOuterWidth < 3 {
+			inputOuterWidth = 3
+		}
+		inputInnerWidth := inputOuterWidth - inputBorderStyle.GetHorizontalFrameSize()
+		promptWidth := lipgloss.Width(m.textinput.Prompt)
+		m.textinput.Width = inputInnerWidth - promptWidth - 1
+		if m.textinput.Width < 1 {
+			m.textinput.Width = 1
+		}
 
 	case tea.KeyMsg:
 		switch msg.String() {

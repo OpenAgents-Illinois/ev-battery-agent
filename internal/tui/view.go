@@ -3,6 +3,8 @@ package tui
 import (
 	"fmt"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 func (m model) View() string {
@@ -10,20 +12,44 @@ func (m model) View() string {
 		return "Initializing..."
 	}
 
+	// Keep these bars at a stable height.
+	// If they wrap, Bubble Tea may leave "ghost" lines from previous renders.
+	availableWidth := m.width - 2
+	if availableWidth < 1 {
+		availableWidth = 1
+	}
+
+	// Header/subheader should be 1-line; if the terminal is too narrow they may wrap,
+	// but the primary ghosting issue is the bottom bar, which we clip separately.
 	header := headerStyle.Render("⚡  EV BATTERY SAFETY AGENT  ⚡")
 	subHeader := subHeaderStyle.Render("Gemini 2.0 Flash  ·  Rivian R1S / R1T Manuals  ·  Jira Auto-Ticketing")
+	mainBoxWidth := m.width - 2
+	if mainBoxWidth < 3 {
+		mainBoxWidth = 3
+	}
 
 	conversation := borderStyle.
-		Width(m.width - 2).
-		Height(m.viewport.Height).
+		Width(mainBoxWidth - borderStyle.GetHorizontalFrameSize()).
 		Render(m.viewport.View())
 
-	inputBox := inputBorderStyle.Width(m.width - 4).Render(m.textinput.View())
+	inputBox := inputBorderStyle.
+		Width(mainBoxWidth - inputBorderStyle.GetHorizontalFrameSize()).
+		Render(m.textinput.View())
 
 	vehicleText := vehicleStyle.Render(fmt.Sprintf("  Vehicle: %s  ", m.vehicle))
 	sep := dimStyle.Render(" │ ")
 	hint := dimStyle.Render("  Ctrl+C to exit  ")
-	statusBar := vehicleText + sep + m.renderStatus() + sep + hint
+
+	vehicleRaw := fmt.Sprintf("  Vehicle: %s  ", m.vehicle)
+	sepRaw := " │ "
+	hintRaw := "  Ctrl+C to exit  "
+	// Subtract an extra cell as a safety margin to avoid accidental wrapping.
+	statusMaxWidth := availableWidth - lipgloss.Width(vehicleRaw) - (2 * lipgloss.Width(sepRaw)) - lipgloss.Width(hintRaw) - 1
+	if statusMaxWidth < 1 {
+		statusMaxWidth = 1
+	}
+
+	statusBar := vehicleText + sep + m.renderStatus(statusMaxWidth) + sep + hint
 
 	return strings.Join([]string{
 		header,
@@ -39,12 +65,13 @@ func (m model) renderLines() string {
 	return strings.Join(m.lines, "\n")
 }
 
-func (m model) renderStatus() string {
+func (m model) renderStatus(maxWidth int) string {
 	prefix := ""
 	if m.processing {
 		prefix = m.spinner.View() + " "
 	}
 	text := "  " + prefix + m.status + "  "
+	text = clipTextToWidth(text, maxWidth)
 	switch m.statusKind {
 	case "critical", "error":
 		return statusCriticalStyle.Render(text)
@@ -55,6 +82,23 @@ func (m model) renderStatus() string {
 	default:
 		return statusReadyStyle.Render(text)
 	}
+}
+
+func clipTextToWidth(s string, maxWidth int) string {
+	if maxWidth <= 0 {
+		return ""
+	}
+	if lipgloss.Width(s) <= maxWidth {
+		return s
+	}
+
+	// Simple rune-based truncation that respects the visible width.
+	// Input strings are small (header/status), so O(n^2) is fine here.
+	r := []rune(s)
+	for len(r) > 0 && lipgloss.Width(string(r)) > maxWidth {
+		r = r[:len(r)-1]
+	}
+	return string(r)
 }
 
 func ticketStatus(lower string) string {
