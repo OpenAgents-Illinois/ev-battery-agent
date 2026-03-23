@@ -41,13 +41,14 @@ public class AgentFactory {
             .build();
 
         // maxSegmentsPerBatch: text-embedding-004 caps at 20k tokens/batch.
-        // At 300 tokens/chunk, 20 segments = ~6,000 tokens/batch — safely under the limit.
+        // At 300 tokens/chunk, 50 segments = ~15,000 tokens/batch — safely under the limit.
+        // Higher batch size = fewer API round-trips = faster initial embedding.
         VertexAiEmbeddingModel embeddingModel = VertexAiEmbeddingModel.builder()
             .project(projectId)
             .location(location)
             .modelName("text-embedding-004")
             .publisher("google")
-            .maxSegmentsPerBatch(20)
+            .maxSegmentsPerBatch(50)
             .build();
 
         ContentRetriever r1sRetriever = buildRetriever(embeddingModel, "docs/R1S");
