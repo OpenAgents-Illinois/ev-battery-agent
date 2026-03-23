@@ -19,7 +19,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		headerH := 4 // title + subtitle + blank line
+		headerH := 3 // title + subtitle + blank line
 		inputH := 3  // input box with border (top border + content + bottom border)
 		statusH := 1 // status bar
 		vpHeight := m.height - headerH - inputH - statusH - 2
