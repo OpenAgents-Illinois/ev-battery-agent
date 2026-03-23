@@ -53,6 +53,7 @@ test {
         excludeTags 'integration'
     }
     workingDir = rootProject.projectDir
+    outputs.upToDateWhen { false }
     testLogging {
         showStandardStreams = true
         events "passed", "skipped", "failed"
