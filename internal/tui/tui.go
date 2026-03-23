@@ -11,7 +11,6 @@ func Start(f *agent.Factory) error {
 	p := tea.NewProgram(
 		newModel(f),
 		tea.WithAltScreen(),
-		tea.WithMouseCellMotion(),
 	)
 	_, err := p.Run()
 	return err

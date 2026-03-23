@@ -15,6 +15,7 @@ func (m model) View() string {
 
 	conversation := borderStyle.
 		Width(m.width - 2).
+		Height(m.viewport.Height).
 		Render(m.viewport.View())
 
 	inputBox := inputBorderStyle.Width(m.width - 4).Render(m.textinput.View())
