@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"ev-battery-agent/internal/telemetry"
+	"github.com/OpenAgents-Illinois/ev-battery-agent/internal/telemetry"
 )
 
 func TestToPromptStringIncludesAllFields(t *testing.T) {

@@ -22,14 +22,21 @@ If a problem occurs (such as a battery thermal risk or a voltage anomaly) the ag
 | TUI | charmbracelet/bubbletea + lipgloss |
 | RAG | In-memory cosine similarity vector store |
 
-## Setup
+## Install
 
-**1. Clone and install dependencies**
 ```bash
-git clone <repo>
-cd ev-battery-agent
-go mod download
+go install github.com/OpenAgents-Illinois/ev-battery-agent@latest
 ```
+
+Or clone and build manually:
+
+```bash
+git clone https://github.com/OpenAgents-Illinois/ev-battery-agent
+cd ev-battery-agent
+go build -o ev-battery-agent .
+```
+
+## Setup
 
 **2. Create a `.env` file**
 ```env
@@ -48,7 +55,7 @@ gcloud auth application-default login
 ## Build & Run
 
 ```bash
-go build -o ev-battery-agent .
+go build -o ev-battery-agent .  # if cloned manually
 
 # Bubble Tea TUI (interactive mode)
 ./ev-battery-agent

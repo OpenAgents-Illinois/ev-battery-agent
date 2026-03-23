@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"ev-battery-agent/internal/telemetry"
+	"github.com/OpenAgents-Illinois/ev-battery-agent/internal/telemetry"
 )
 
 func TestDetectModelFromVINR1S(t *testing.T) {

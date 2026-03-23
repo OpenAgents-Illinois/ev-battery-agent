@@ -3,7 +3,7 @@ package tui
 import (
 	tea "github.com/charmbracelet/bubbletea"
 
-	"ev-battery-agent/internal/agent"
+	"github.com/OpenAgents-Illinois/ev-battery-agent/internal/agent"
 )
 
 // Start launches the Bubble Tea TUI in full-screen mode.

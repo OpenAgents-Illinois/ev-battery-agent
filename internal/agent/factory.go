@@ -8,7 +8,7 @@ import (
 	"github.com/tmc/langchaingo/llms/googleai"
 	"github.com/tmc/langchaingo/llms/googleai/vertex"
 
-	"ev-battery-agent/internal/jira"
+	"github.com/OpenAgents-Illinois/ev-battery-agent/internal/jira"
 )
 
 // embedderFunc takes a batch of texts and returns their embeddings.

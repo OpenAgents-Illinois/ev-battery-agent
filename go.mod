@@ -1,4 +1,4 @@
-module ev-battery-agent
+module github.com/OpenAgents-Illinois/ev-battery-agent
 
 go 1.22.0
 

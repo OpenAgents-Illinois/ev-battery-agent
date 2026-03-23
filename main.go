@@ -9,9 +9,9 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"ev-battery-agent/internal/agent"
-	"ev-battery-agent/internal/server"
-	"ev-battery-agent/internal/tui"
+	"github.com/OpenAgents-Illinois/ev-battery-agent/internal/agent"
+	"github.com/OpenAgents-Illinois/ev-battery-agent/internal/server"
+	"github.com/OpenAgents-Illinois/ev-battery-agent/internal/tui"
 )
 
 func main() {

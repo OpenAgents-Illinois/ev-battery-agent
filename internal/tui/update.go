@@ -9,7 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"ev-battery-agent/internal/agent"
+	"github.com/OpenAgents-Illinois/ev-battery-agent/internal/agent"
 )
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

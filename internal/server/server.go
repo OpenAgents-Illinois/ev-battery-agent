@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"ev-battery-agent/internal/agent"
+	"github.com/OpenAgents-Illinois/ev-battery-agent/internal/agent"
 )
 
 // Start launches the HTTP server on the given port.

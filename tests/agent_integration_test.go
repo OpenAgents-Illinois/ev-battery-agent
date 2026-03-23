@@ -10,7 +10,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"ev-battery-agent/internal/agent"
+	"github.com/OpenAgents-Illinois/ev-battery-agent/internal/agent"
 )
 
 // TestOverheatingScenario requires live GCP credentials and Jira access.

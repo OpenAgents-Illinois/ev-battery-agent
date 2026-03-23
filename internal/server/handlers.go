@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
-	"ev-battery-agent/internal/agent"
-	"ev-battery-agent/internal/telemetry"
+	"github.com/OpenAgents-Illinois/ev-battery-agent/internal/agent"
+	"github.com/OpenAgents-Illinois/ev-battery-agent/internal/telemetry"
 )
 
 func healthHandler() http.HandlerFunc {
