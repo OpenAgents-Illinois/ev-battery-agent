@@ -32,9 +32,18 @@ func (m model) View() string {
 		Width(mainBoxWidth - borderStyle.GetHorizontalFrameSize()).
 		Render(m.viewport.View())
 
+	inputInnerWidth := mainBoxWidth - inputBorderStyle.GetHorizontalFrameSize()
+	if inputInnerWidth < 1 {
+		inputInnerWidth = 1
+	}
+	inputView := strings.SplitN(m.textinput.View(), "\n", 2)[0]
+	inputView = clipTextToWidth(inputView, inputInnerWidth)
+	inputView = lipgloss.NewStyle().Width(inputInnerWidth).Render(inputView)
+
 	inputBox := inputBorderStyle.
-		Width(mainBoxWidth - inputBorderStyle.GetHorizontalFrameSize()).
-		Render(m.textinput.View())
+		Width(inputInnerWidth).
+		Height(1).
+		Render(inputView)
 
 	vehicleText := vehicleStyle.Render(fmt.Sprintf("  Vehicle: %s  ", m.vehicle))
 	sep := dimStyle.Render(" │ ")
