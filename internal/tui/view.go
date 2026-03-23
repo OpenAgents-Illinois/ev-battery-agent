@@ -22,7 +22,7 @@ func (m model) View() string {
 
 	// Header/subheader should be 1-line; if the terminal is too narrow they may wrap,
 	// but the primary ghosting issue is the bottom bar, which we clip separately.
-	header := headerStyle.Render("⚡  EV BATTERY SAFETY AGENT  ⚡")
+	header := headerStyle.Render("EV Battery Agent")
 	subHeader := subHeaderStyle.Render("Gemini 2.0 Flash  ·  Rivian R1S / R1T Manuals  ·  Jira Auto-Ticketing")
 	mainBoxWidth := m.width - 2
 	if mainBoxWidth < 3 {
