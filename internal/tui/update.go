@@ -73,7 +73,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.severity != agent.SeverityUnknown {
 			m.addLine(renderSeverityFlag(msg.severity))
 		}
-		m.addLine(agentMsgStyle.Render("Agent › ") + wordWrap(msg.text, m.width-10))
+		m.addLine(agentMsgStyle.Render("Agent › ") + formatAgentResponse(msg.text, m.width-10))
 		m.vehicle = msg.vehicle
 		lower := strings.ToLower(msg.text)
 		switch msg.severity {

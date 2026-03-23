@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -140,4 +141,40 @@ func wordWrap(text string, maxWidth int) string {
 		lines = append(lines, current.String())
 	}
 	return strings.Join(lines, "\n      ")
+}
+
+var inlineBulletRe = regexp.MustCompile(`\s\*\s+`)
+
+func formatAgentResponse(text string, maxWidth int) string {
+	if maxWidth <= 0 {
+		return text
+	}
+
+	normalized := strings.ReplaceAll(text, "\r\n", "\n")
+	normalized = strings.ReplaceAll(normalized, "\r", "\n")
+	// Turn inline markdown bullets into actual lines.
+	normalized = inlineBulletRe.ReplaceAllString(normalized, "\n* ")
+	normalized = strings.ReplaceAll(normalized, "**", "")
+	normalized = strings.ReplaceAll(normalized, "`", "")
+
+	var out []string
+	lines := strings.Split(normalized, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		if strings.HasPrefix(line, "* ") || strings.HasPrefix(line, "- ") {
+			item := strings.TrimSpace(line[2:])
+			wrapped := wordWrap(item, maxWidth-2)
+			wrapped = strings.ReplaceAll(wrapped, "\n      ", "\n  ")
+			out = append(out, "• "+wrapped)
+			continue
+		}
+
+		out = append(out, wordWrap(line, maxWidth))
+	}
+
+	return strings.Join(out, "\n      ")
 }
