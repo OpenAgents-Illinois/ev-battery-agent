@@ -18,9 +18,9 @@ import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
  * Initializes the expensive shared resources (models, per-model embedding stores) once at startup.
  *
  * Vehicle routing:
- *   R1S → docs/R1S/  (R1S owner manuals only)
- *   R1T → docs/R1T/  (R1T owner manuals only)
- *   UNKNOWN → docs/  (all documents, fallback)
+ *   R1S         → docs/R1S/  (R1S owner manuals only)
+ *   R1T         → docs/R1T/  (R1T owner manuals only)
+ *   UNKNOWN/null → falls back to R1S (avoids embedding all docs a third time)
  *
  * Use newAgent(vehicleModel) to get a fresh EvExpert with the correct retriever and clean memory.
  */
@@ -47,22 +47,21 @@ public class AgentFactory {
             .maxSegmentsPerBatch(20)
             .build();
 
+        ContentRetriever r1sRetriever = buildRetriever(embeddingModel, "docs/R1S");
+        ContentRetriever r1tRetriever = buildRetriever(embeddingModel, "docs/R1T");
         this.retrievers = Map.of(
-            "R1S", buildRetriever(embeddingModel, "docs/R1S"),
-            "R1T", buildRetriever(embeddingModel, "docs/R1T"),
-            "UNKNOWN", buildRetriever(embeddingModel, "docs")
+            "R1S", r1sRetriever,
+            "R1T", r1tRetriever
         );
     }
 
     /**
      * Returns a fresh agent wired to the correct vehicle's document store.
-     * vehicleModel should be "R1S", "R1T", or "UNKNOWN".
+     * Unrecognized or null vehicleModel falls back to R1S.
      */
     public EvExpert newAgent(String vehicleModel) {
-        ContentRetriever retriever = retrievers.getOrDefault(
-            vehicleModel != null ? vehicleModel.toUpperCase() : "UNKNOWN",
-            retrievers.get("UNKNOWN")
-        );
+        String key = vehicleModel != null ? vehicleModel.toUpperCase() : "";
+        ContentRetriever retriever = retrievers.getOrDefault(key, retrievers.get("R1S"));
         return AiServices.builder(EvExpert.class)
             .chatLanguageModel(chatModel)
             .contentRetriever(retriever)
