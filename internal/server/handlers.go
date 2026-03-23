@@ -37,6 +37,25 @@ func analyzeHandler(factory *agent.Factory) http.HandlerFunc {
 			return
 		}
 
-		writeJSON(w, http.StatusOK, analysisResponse{VIN: t.VIN, Analysis: analysis})
+		severity := agent.DetectSeverity(analysis)
+		writeJSON(w, http.StatusOK, analysisResponse{
+			VIN:      t.VIN,
+			Analysis: analysis,
+			Severity: severity,
+			Flag:     severityFlag(severity),
+		})
+	}
+}
+
+func severityFlag(severity string) string {
+	switch severity {
+	case agent.SeverityCritical:
+		return "critical"
+	case agent.SeverityWarning:
+		return "warning"
+	case agent.SeverityInfo:
+		return "info"
+	default:
+		return "unknown"
 	}
 }

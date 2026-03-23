@@ -70,14 +70,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case agentResultMsg:
 		m.processing = false
 		m.addLine("")
+		if msg.severity != agent.SeverityUnknown {
+			m.addLine(renderSeverityFlag(msg.severity))
+		}
 		m.addLine(agentMsgStyle.Render("Agent › ") + wordWrap(msg.text, m.width-10))
 		m.vehicle = msg.vehicle
 		lower := strings.ToLower(msg.text)
-		switch {
-		case strings.Contains(lower, "critical"):
+		switch msg.severity {
+		case agent.SeverityCritical:
 			m.setStatus("CRITICAL — "+ticketStatus(lower), "critical")
-		case strings.Contains(lower, "warning"):
+		case agent.SeverityWarning:
 			m.setStatus("WARNING — "+ticketStatus(lower), "warning")
+		case agent.SeverityInfo:
+			m.setStatus("INFO — "+ticketStatus(lower), "ready")
 		default:
 			m.setStatus("Ready", "ready")
 		}
@@ -134,9 +139,27 @@ func (m *model) submit() (tea.Model, tea.Cmd) {
 			if err != nil {
 				return agentErrMsg{err}
 			}
-			return agentResultMsg{text: result, vehicle: vehicle}
+			return agentResultMsg{
+				text:     result,
+				vehicle:  vehicle,
+				severity: agent.DetectSeverity(result),
+			}
 		},
 	)
+}
+
+func renderSeverityFlag(severity string) string {
+	label := "Flag › " + severity
+	switch severity {
+	case agent.SeverityCritical:
+		return statusCriticalStyle.Render(label)
+	case agent.SeverityWarning:
+		return statusWarningStyle.Render(label)
+	case agent.SeverityInfo:
+		return statusReadyStyle.Render(label)
+	default:
+		return dimStyle.Render(label)
+	}
 }
 
 func (m *model) addLine(line string) {

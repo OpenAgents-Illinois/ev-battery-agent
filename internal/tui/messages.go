@@ -2,8 +2,9 @@ package tui
 
 // agentResultMsg is sent when the agent finishes processing a user message.
 type agentResultMsg struct {
-	text    string
-	vehicle string
+	text     string
+	vehicle  string
+	severity string
 }
 
 // agentErrMsg is sent when the agent returns an error.

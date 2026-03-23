@@ -8,6 +8,8 @@ import (
 type analysisResponse struct {
 	VIN      string `json:"vin"`
 	Analysis string `json:"analysis"`
+	Severity string `json:"severity"`
+	Flag     string `json:"flag"`
 }
 
 type errorResponse struct {
